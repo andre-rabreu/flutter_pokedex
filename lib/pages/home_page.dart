@@ -1,4 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+
+import 'pokemon_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -8,6 +11,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final Dio dio = Dio();
   final textController = TextEditingController();
 
   @override
@@ -48,7 +52,7 @@ class _HomePageState extends State<HomePage> {
                       color: Colors.grey[500],
                       fontSize: 24,
                     ),
-                    hintText: 'Pesquisar pokémon',
+                    hintText: 'Search pokémon',
                     border: const OutlineInputBorder(
                       borderSide: BorderSide.none,
                     ),
@@ -59,10 +63,40 @@ class _HomePageState extends State<HomePage> {
                     fontSize: 24,
                   ),
                   controller: textController,
-                  onSubmitted: (value) {
+                  onSubmitted: (value) async {
                     if (value.isNotEmpty) {
-                      Navigator.pushNamed(context, '/pokemon',
-                        arguments: {'pokemonName': value});
+                      try {
+                        final response = await dio.get(
+                            'https://pokeapi.co/api/v2/pokemon/${value.toLowerCase()}'
+                        );
+                        List<String> types = [];
+                        for(var type in response.data['types']){
+                          types.add(type['type']['name']);
+                        }
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => PokemonPage(
+                              name: response.data['name'],
+                              id: response.data['id'].toString(),
+                              spriteUrl: response.data['sprites']['front_default'],
+                              types: types,
+                            ),
+                          )
+                        );
+                      } on DioException catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text('Pokémon not found. Error status: ${e.response?.statusCode}'),
+                              backgroundColor: Colors.red,
+                              action: SnackBarAction(
+                                label: 'Dismiss',
+                                onPressed: () {
+                                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                },
+                              )
+                          )
+                        );
+                      }
                     }
                   }
                 ),
@@ -70,15 +104,56 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 32),
             ElevatedButton(
-              onPressed: () {
-                var pokemonName = textController.text;
-                if (pokemonName.isNotEmpty) {
-                  Navigator.pushNamed(
-                    context, '/pokemon',
-                    arguments: {'pokemonName': pokemonName});
+              onPressed: () async {
+                var value = textController.text;
+                if (value.isNotEmpty) {
+                  try {
+                    final response = await dio.get(
+                        'https://pokeapi.co/api/v2/pokemon/${value.toLowerCase()}'
+                    );
+                    List<String> types = [];
+                    for(var type in response.data['types']){
+                      types.add(type['type']['name']);
+                    }
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => PokemonPage(
+                          name: response.data['name'],
+                          id: response.data['id'].toString(),
+                          spriteUrl: response.data['sprites']['front_default'],
+                          types: types,
+                        ),
+                      )
+                    );
+                  } on DioException catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Pokémon not found. Error status: ${e.response?.statusCode}'),
+                        backgroundColor: Colors.red,
+                        action: SnackBarAction(
+                          label: 'Dismiss',
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                          },
+                        )
+                      )
+                    );
                   }
-                },
-              child: const Text('Buscar pokémon'),
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromRGBO(255, 204, 1, 1),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Find pokémon',
+                  style: TextStyle(
+                    fontSize: 24,
+                    color: Colors.black,
+                  )
+                ),
+              ),
             ),
           ],
         )

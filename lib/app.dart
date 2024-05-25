@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_pokedex/pages/home_page.dart';
-import 'package:flutter_pokedex/pages/pokemon_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class App extends StatelessWidget {
@@ -17,7 +16,6 @@ class App extends StatelessWidget {
       ),
       routes: {
         "/home": (context) => const HomePage(),
-        "/pokemon": (context) => const PokemonPage(),
       },
     );
   }
